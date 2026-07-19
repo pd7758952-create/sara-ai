@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sara AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #05050a;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .app-viewport {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            height: 100vh;
+            background-color: #11111e;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+        }
+
+        .character-container {
+            width: 100%;
+            height: 82vh;
+            position: relative;
+            overflow: hidden;
+            background-color: #11111e;
+        }
+
+        #animeImage {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 15%;
+            display: block;
+        }
+
+        .bottom-control-panel {
+            width: 100%;
+            height: 18vh;
+            background: #0d0d16;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 20px 15px 20px;
+            border-top: 2px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .smart-info-box {
+            width: 105px; height: 65px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            display: flex; justify-content: center; align-items: center;
+            color: #ffffff; padding: 5px; text-align: center;
+        }
+
+        .info-content { font-size: 10px; line-height: 1.3; color: #d1d1e0; }
+
+        .mic-outer-ring {
+            position: relative; width: 75px; height: 75px;
+            display: flex; justify-content: center; align-items: center;
+        }
+
+        .mic-main-btn {
+            position: relative; width: 65px; height: 65px; border-radius: 50%;
+            border: 2px solid rgba(162, 155, 254, 0.4); background: rgba(20, 20, 35, 0.9);
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+        }
+
+        .wave-line-container { display: flex; align-items: center; gap: 4px; height: 22px; }
+        .wave-bar { width: 3px; height: 7px; background-color: #a29bfe; border-radius: 2px; }
+
+        .mic-main-btn.listening { border-color: #ff7675; box-shadow: inset 0 0 15px rgba(214, 48, 49, 0.4); }
+        .mic-main-btn.listening .wave-bar { background-color: #ff7675; animation: barActive 0.3s infinite ease-in-out alternate; }
+
+        @keyframes barActive { 0% { transform: scaleY(0.5); } 100% { transform: scaleY(3.5); } }
+    </style>
+</head>
+<body>
+
+    <div class="app-viewport">
+        <div class="character-container">
+            <img id="animeImage" src="https://i.ibb.co/CK1WLFj2/1784354060300-2.jpg" alt="Sara">
+        </div>
+
+        <div class="bottom-control-panel">
+            <div class="smart-info-box">
+                <div id="infoContent" class="info-content">✨ সারা অনলাইন</div>
+            </div>
+            
+            <div class="mic-outer-ring">
+                <button class="mic-main-btn" id="micTrigger">
+                    <div class="wave-line-container">
+                        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
+                    </div>
+                </button>
+            </div>
+
+            <div class="smart-info-box" style="opacity: 0; pointer-events: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const micTrigger = document.getElementById('micTrigger');
+        const infoContent = document.getElementById('infoContent');
+
+        // এখানে কোডের ভেতরে কোনো এপিআই কী নেই, এটা Vercel-এর Environment Variable থেকে ডাইনামিকালি লোড হবে
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let voiceTracker = null;
+        let isListening = false;
+
+        if (SpeechRecognition) {
+            voiceTracker = new SpeechRecognition();
+            voiceTracker.continuous = false;
+            voiceTracker.lang = 'bn-BD';
+
+            voiceTracker.onresult = async (event) => {
+                stopListeningMode();
+                const speechString = event.results[0][0].transcript;
+                infoContent.innerText = "🤔 ভাবছি...";
+                
+                const aiReply = await askGeminiAI(speechString);
+                triggerVoiceResponse(aiReply);
+            };
+
+            voiceTracker.onerror = () => { stopListeningMode(); };
+            voiceTracker.onend = () => { if(isListening) stopListeningMode(); };
+        }
+
+        async function askGeminiAI(userMessage) {
+            try {
+                // Vercel Serverless Function বা API Endpoint হ্যান্ডলিং লজিক
+                const promptSystem = "তোমার নাম সারা। তুমি প্রীতমের কিউট ভয়েস অ্যাসিস্ট্যান্ট। মিষ্টি করে সংক্ষেপে বাংলায় উত্তর দাও।";
+                
+                // Vercel-এর সুরক্ষিত ব্যাকএন্ড গেটওয়ে
+                const response = await fetch('/api/gemini', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: `${promptSystem} ইউজার বলল: ${userMessage}` })
+                });
+                
+                const data = await response.json();
+                return data.reply;
+            } catch (error) {
+                return "আমি তোমার কথা শুনতে পেয়েছি প্রীতম, কিন্তু ব্যাকএন্ড কানেকশন করতে পারছি না। Vercel Env চেক করো।";
+            }
+        }
+
+        function triggerVoiceResponse(replyText) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const cleanText = replyText.replace(/<[^>]*>/g, '');
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'bn-BD';
+                utterance.pitch = 1.35;
+
+                utterance.onstart = () => { infoContent.innerHTML = replyText; };
+                utterance.onend = () => { infoContent.innerText = "✨ সারা রেডি"; };
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        document.getElementById('micTrigger').addEventListener('click', () => {
+            if (isListening) {
+                stopListeningMode();
+            } else {
+                if (voiceTracker) {
+                    isListening = true;
+                    micTrigger.classList.add('listening');
+                    infoContent.innerText = "🎙️ শুনছি...";
+                    voiceTracker.start();
+                }
+            }
+        });
+
+        function stopListeningMode() {
+            isListening = false;
+            micTrigger.classList.remove('listening');
+            infoContent.innerText = "✨ সারা রেডি";
+            if (voiceTracker) voiceTracker.stop();
+        }
+    </script>
+</body>
+</html>
