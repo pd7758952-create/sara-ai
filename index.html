@@ -5,196 +5,245 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sara AI Assistant</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body, html {
-            width: 100%;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #05050a;
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .app-viewport {
-            position: relative;
-            width: 100%;
-            max-width: 450px;
-            height: 100vh;
-            background-color: #11111e;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0b0e14;
+            color: #ffffff;
+            font-family: 'Segoe UI', Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 15px;
         }
-
-        .character-container {
+        .app-card {
             width: 100%;
-            height: 82vh;
-            position: relative;
-            overflow: hidden;
-            background-color: #11111e;
+            max-width: 380px;
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
-
-        #animeImage {
+        
+        /* আভাটার ও অ্যানিমেশন স্টাইল */
+        .avatar-box {
+            width: 260px;
+            height: 320px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid #58a6ff;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+            margin-bottom: 15px;
+            position: relative;
+        }
+        .avatar-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center 15%;
-            display: block;
+            transition: all 0.3s ease;
+        }
+        .talking {
+            animation: pulse-border 1.2s infinite alternate;
+        }
+        @keyframes pulse-border {
+            0% { box-shadow: 0 0 15px rgba(255, 121, 198, 0.4); border-color: #ff79c6; }
+            100% { box-shadow: 0 0 30px rgba(255, 121, 198, 0.9); border-color: #ff79c6; }
         }
 
-        .bottom-control-panel {
+        .api-input {
             width: 100%;
-            height: 18vh;
-            background: #0d0d16;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 20px 15px 20px;
-            border-top: 2px solid rgba(255, 255, 255, 0.15);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: #7ee787;
+            font-size: 11px;
+            outline: none;
+            text-align: center;
         }
 
-        .smart-info-box {
-            width: 105px; height: 65px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .status-badge {
+            font-size: 13px;
+            color: #ff79c6;
+            margin-bottom: 12px;
+            font-weight: bold;
+        }
+
+        .chat-box {
+            width: 100%;
+            background: #0d1117;
+            border: 1px solid #30363d;
             border-radius: 12px;
-            display: flex; justify-content: center; align-items: center;
-            color: #ffffff; padding: 5px; text-align: center;
+            height: 120px;
+            overflow-y: auto;
+            padding: 10px;
+            text-align: left;
+            font-size: 13px;
+            margin-bottom: 12px;
         }
+        .user-msg { color: #58a6ff; margin-bottom: 6px; }
+        .ai-msg { color: #7ee787; margin-bottom: 6px; }
 
-        .info-content { font-size: 10px; line-height: 1.3; color: #d1d1e0; }
-
-        .mic-outer-ring {
-            position: relative; width: 75px; height: 75px;
-            display: flex; justify-content: center; align-items: center;
+        .controls { display: flex; gap: 8px; width: 100%; }
+        input.msg-input {
+            flex: 1;
+            padding: 12px;
+            border-radius: 20px;
+            border: 1px solid #30363d;
+            background: #0d1117;
+            color: white;
+            outline: none;
+            font-size: 14px;
         }
-
-        .mic-main-btn {
-            position: relative; width: 65px; height: 65px; border-radius: 50%;
-            border: 2px solid rgba(162, 155, 254, 0.4); background: rgba(20, 20, 35, 0.9);
-            cursor: pointer; display: flex; justify-content: center; align-items: center;
+        button {
+            border: none;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 0 16px;
         }
-
-        .wave-line-container { display: flex; align-items: center; gap: 4px; height: 22px; }
-        .wave-bar { width: 3px; height: 7px; background-color: #a29bfe; border-radius: 2px; }
-
-        .mic-main-btn.listening { border-color: #ff7675; box-shadow: inset 0 0 15px rgba(214, 48, 49, 0.4); }
-        .mic-main-btn.listening .wave-bar { background-color: #ff7675; animation: barActive 0.3s infinite ease-in-out alternate; }
-
-        @keyframes barActive { 0% { transform: scaleY(0.5); } 100% { transform: scaleY(3.5); } }
+        .send-btn { background: #1f6feb; color: white; }
+        .mic-btn { background: #ea4435; color: white; font-size: 16px; }
     </style>
 </head>
 <body>
 
-    <div class="app-viewport">
-        <div class="character-container">
-            <img id="animeImage" src="https://i.ibb.co/CK1WLFj2/1784354060300-2.jpg" alt="Sara">
-        </div>
-
-        <div class="bottom-control-panel">
-            <div class="smart-info-box">
-                <div id="infoContent" class="info-content">✨ সারা অনলাইন</div>
-            </div>
-            
-            <div class="mic-outer-ring">
-                <button class="mic-main-btn" id="micTrigger">
-                    <div class="wave-line-container">
-                        <div class="wave-bar"></div><div class="wave-bar"></div><div class="wave-bar"></div>
-                    </div>
-                </button>
-            </div>
-
-            <div class="smart-info-box" style="opacity: 0; pointer-events: none;"></div>
-        </div>
+<div class="app-card">
+    <!-- সারা অ্যানিমে আভাটার -->
+    <div class="avatar-box" id="avatarBox">
+        <img id="saraImg" src="https://i.ibb.co/L5fX03y/sara.jpg" alt="Sara AI">
     </div>
 
-    <script>
-        const micTrigger = document.getElementById('micTrigger');
-        const infoContent = document.getElementById('infoContent');
+    <!-- Gemini API Key (এখানে নিজের Key বসালে ১ সেকেন্ডে কাজ করবে) -->
+    <input type="password" id="apiKey" class="api-input" placeholder="এখানে Gemini API Key পেস্ট করো">
 
-        // এখানে কোডের ভেতরে কোনো এপিআই কী নেই, এটা Vercel-এর Environment Variable থেকে ডাইনামিকালি লোড হবে
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let voiceTracker = null;
-        let isListening = false;
+    <div id="status" class="status-badge">✨ সারা প্রস্তুত!</div>
 
-        if (SpeechRecognition) {
-            voiceTracker = new SpeechRecognition();
-            voiceTracker.continuous = false;
-            voiceTracker.lang = 'bn-BD';
+    <!-- চ্যাট ইতিহাস -->
+    <div class="chat-box" id="chatBox">
+        <div class="ai-msg"><b>সারা:</b> হাই প্রীতম! কিছু বলো, আমি শুনছি...</div>
+    </div>
 
-            voiceTracker.onresult = async (event) => {
-                stopListeningMode();
-                const speechString = event.results[0][0].transcript;
-                infoContent.innerText = "🤔 ভাবছি...";
-                
-                const aiReply = await askGeminiAI(speechString);
-                triggerVoiceResponse(aiReply);
+    <!-- ইনপুট ও কন্ট্রোল -->
+    <div class="controls">
+        <input type="text" id="userInput" class="msg-input" placeholder="মেসেজ লেখো..." onkeydown="if(event.key==='Enter') sendMsg()">
+        <button class="send-btn" onclick="sendMsg()">পাঠাও</button>
+        <button class="mic-btn" onclick="startListening()">🎙️</button>
+    </div>
+</div>
+
+<script>
+    const statusDiv = document.getElementById('status');
+    const chatBox = document.getElementById('chatBox');
+    const inputField = document.getElementById('userInput');
+    const apiKeyField = document.getElementById('apiKey');
+    const saraImg = document.getElementById('saraImg');
+    const avatarBox = document.getElementById('avatarBox');
+
+    // ছবি ও জিপ অ্যানিমেশন লিঙ্ক
+    const idleImg = "https://i.ibb.co/L5fX03y/sara.jpg"; 
+    const talkingGif = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExbm94OHR4ZnR5ZXJ1ZG0zeHZhZmt1eXJ0YnVxbzZhMHF4aXg0ZnRhYSZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/3o7TKSjRrfIPjeiVyM/giphy.gif";
+
+    // ১. কথা বলা ও অ্যানিমেশন কন্ট্রোল
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'bn-IN';
+            utterance.rate = 0.95;
+            utterance.pitch = 1.2;
+
+            utterance.onstart = () => { 
+                statusDiv.innerText = "🗣️ সারা বলছে...";
+                saraImg.src = talkingGif; // কথা বলার সময় GIF চলবে (নড়াচড়া করবে)
+                avatarBox.classList.add('talking');
             };
 
-            voiceTracker.onerror = () => { stopListeningMode(); };
-            voiceTracker.onend = () => { if(isListening) stopListeningMode(); };
+            utterance.onend = () => { 
+                statusDiv.innerText = "✨ সারা প্রস্তুত!";
+                saraImg.src = idleImg; // থামলে স্থির ছবি হয়ে যাবে
+                avatarBox.classList.remove('talking');
+            };
+
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // ২. AI উত্তর জেনারেট করা
+    async function sendMsg() {
+        const text = inputField.value.trim();
+        const key = apiKeyField.value.trim();
+
+        if (!text) return;
+        if (!key) {
+            alert("অনুগ্রহ করে ওপরের বক্সে তোমার Gemini API Key-টি পেস্ট করো!");
+            return;
         }
 
-        async function askGeminiAI(userMessage) {
-            try {
-                // Vercel Serverless Function বা API Endpoint হ্যান্ডলিং লজিক
-                const promptSystem = "তোমার নাম সারা। তুমি প্রীতমের কিউট ভয়েস অ্যাসিস্ট্যান্ট। মিষ্টি করে সংক্ষেপে বাংলায় উত্তর দাও।";
-                
-                // Vercel-এর সুরক্ষিত ব্যাকএন্ড গেটওয়ে
-                const response = await fetch('/api/gemini', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: `${promptSystem} ইউজার বলল: ${userMessage}` })
-                });
-                
-                const data = await response.json();
-                return data.reply;
-            } catch (error) {
-                return "আমি তোমার কথা শুনতে পেয়েছি প্রীতম, কিন্তু ব্যাকএন্ড কানেকশন করতে পারছি না। Vercel Env চেক করো।";
-            }
-        }
+        chatBox.innerHTML += `<div class="user-msg"><b>তুমি:</b> ${text}</div>`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+        inputField.value = '';
+        statusDiv.innerText = "🤔 সারা চিন্তা করছে...";
 
-        function triggerVoiceResponse(replyText) {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-                const cleanText = replyText.replace(/<[^>]*>/g, '');
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                utterance.lang = 'bn-BD';
-                utterance.pitch = 1.35;
+        try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: text + " (উত্তরটি ১-২ লাইনে খুব সুন্দর ও মিষ্টি করে বাংলা ভাষায় দাও)" }]
+                    }]
+                })
+            });
 
-                utterance.onstart = () => { infoContent.innerHTML = replyText; };
-                utterance.onend = () => { infoContent.innerText = "✨ সারা রেডি"; };
-                window.speechSynthesis.speak(utterance);
-            }
-        }
-
-        document.getElementById('micTrigger').addEventListener('click', () => {
-            if (isListening) {
-                stopListeningMode();
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                const reply = data.candidates[0].content.parts[0].text;
+                chatBox.innerHTML += `<div class="ai-msg"><b>সারা:</b> ${reply}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+                speakText(reply);
             } else {
-                if (voiceTracker) {
-                    isListening = true;
-                    micTrigger.classList.add('listening');
-                    infoContent.innerText = "🎙️ শুনছি...";
-                    voiceTracker.start();
-                }
+                chatBox.innerHTML += `<div class="ai-msg" style="color:red">❌ API Key ভুল বা ইনভ্যালিড!</div>`;
+                statusDiv.innerText = "❌ এরর";
             }
-        });
-
-        function stopListeningMode() {
-            isListening = false;
-            micTrigger.classList.remove('listening');
-            infoContent.innerText = "✨ সারা রেডি";
-            if (voiceTracker) voiceTracker.stop();
+        } catch (err) {
+            chatBox.innerHTML += `<div class="ai-msg" style="color:red">❌ কানেকশন প্রবলেম!</div>`;
+            statusDiv.innerText = "❌ এরর";
         }
-    </script>
+    }
+
+    // ৩. ভয়েস ইনপুট (মাইক)
+    function startListening() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("তোমার এই ব্রাউজারে ভয়েস সাপোর্ট নেই, টাইপ করে পাঠাও।");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'bn-IN';
+        statusDiv.innerText = "🎧 সারা শুনছে, বলো...";
+        recognition.start();
+
+        recognition.onresult = (event) => {
+            inputField.value = event.results[0][0].transcript;
+            sendMsg();
+        };
+
+        recognition.onerror = () => {
+            statusDiv.innerText = "❌ মাইক এরর!";
+        };
+    }
+</script>
+
 </body>
 </html>
+
